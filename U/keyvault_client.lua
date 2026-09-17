@@ -3,7 +3,7 @@
     KeyVault Login Client
     ─────────────────────────────────────────────
     • Client ID จาก Roblox
-    • บันทึก HWID ลง xhub_hwid.txt
+    • ไม่ใช้ xhub_hwid.txt
     • Login UI
     • ปุ่ม Login / Enter
     • Validate Key
@@ -32,9 +32,7 @@ local CONFIG = {
     API_HEARTBEAT =
         "https://key-gate-manager-copy-515b28d5.base44.app/functions/heartbeat",
 
-    HEARTBEAT_INTERVAL = 45,
-
-    HWID_FILE = "xhub_hwid.txt"
+    HEARTBEAT_INTERVAL = 45
 }
 
 -- ═══════════════════════════════════════════════
@@ -49,56 +47,37 @@ local STATE = {
 }
 
 -- ═══════════════════════════════════════════════
--- HWID
+-- HWID / CLIENT ID
 -- ═══════════════════════════════════════════════
 
 local function getHWID()
 
-    local clientId
-
-    local ok, result = pcall(function()
+    local ok, clientId = pcall(function()
         return RbxAnalyticsService:GetClientId()
     end)
 
-    if not ok or not result or result == "" then
-        warn("[KeyVault] Cannot get Roblox ClientId")
+    if not ok then
+        warn(
+            "[KeyVault] Cannot get Roblox ClientId:",
+            clientId
+        )
+
         return nil
     end
 
-    clientId = result
+    if not clientId
+        or clientId == "" then
 
-    -- มีไฟล์เดิม
-    if isfile and isfile(CONFIG.HWID_FILE) then
+        warn(
+            "[KeyVault] Roblox ClientId is empty"
+        )
 
-        local okRead, saved = pcall(function()
-            return readfile(CONFIG.HWID_FILE)
-        end)
-
-        if okRead and saved and saved ~= "" then
-
-            saved = saved:gsub("^%s*(.-)%s*$", "%1")
-
-            if saved ~= "" then
-                print("[KeyVault] Using saved HWID")
-                return saved
-            end
-        end
+        return nil
     end
 
-    -- ยังไม่มีไฟล์
-    if writefile then
-
-        pcall(function()
-            writefile(CONFIG.HWID_FILE, clientId)
-        end)
-
-        print("[KeyVault] HWID file created")
-
-    else
-
-        warn("[KeyVault] writefile is not available")
-
-    end
+    print(
+        "[KeyVault] Client ID obtained"
+    )
 
     return clientId
 end
@@ -106,7 +85,7 @@ end
 STATE.HWID = getHWID()
 
 if STATE.HWID then
-    print("[KeyVault] HWID loaded")
+    print("[KeyVault] HWID loaded successfully")
 else
     warn("[KeyVault] HWID unavailable")
 end
@@ -669,7 +648,6 @@ local function validateKey(key)
 
         STATE.IsValidated = true
 
-        -- ถ้า Server ส่ง HWID ที่ยืนยันกลับมา
         if data.hwid
             and data.hwid ~= "" then
 
@@ -854,7 +832,6 @@ local function doLogin()
 
     login.Interactable = true
 
-    -- Shake
     local originalPosition =
         main.Position
 
