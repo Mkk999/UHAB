@@ -2,19 +2,21 @@
     ═══════════════════════════════════════════════
     KeyVault Login Client
     ─────────────────────────────────────────────
-    • ใช้ HWID เดิมจากระบบ
-    • ไม่สร้าง HWID ใหม่ถ้ามีอยู่แล้ว
+    • Client ID จาก Roblox
+    • บันทึก HWID ลง xhub_hwid.txt
     • Login UI
-    • กดปุ่มหรือ Enter เพื่อ Login
+    • ปุ่ม Login / Enter
     • Validate Key
     • Heartbeat
     • Auto-load Payload
+    • แสดง API Error สำหรับ Debug
     ═══════════════════════════════════════════════
 ]]
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
+local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -31,6 +33,8 @@ local CONFIG = {
         "https://key-gate-manager-copy-515b28d5.base44.app/functions/heartbeat",
 
     HEARTBEAT_INTERVAL = 45,
+
+    HWID_FILE = "xhub_hwid.txt"
 }
 
 -- ═══════════════════════════════════════════════
@@ -47,17 +51,64 @@ local STATE = {
 -- ═══════════════════════════════════════════════
 -- HWID
 -- ═══════════════════════════════════════════════
--- สำคัญ:
--- Client จะไม่สร้าง HWID ใหม่ตรงนี้
--- ใช้ HWID ที่ระบบเดิมเตรียมไว้ใน _G.XHUB_HWID
--- ถ้าไม่มี จะส่งค่า nil ไปให้ API จัดการตามระบบของคุณ
 
-STATE.HWID = _G.XHUB_HWID
+local function getHWID()
+
+    local clientId
+
+    local ok, result = pcall(function()
+        return RbxAnalyticsService:GetClientId()
+    end)
+
+    if not ok or not result or result == "" then
+        warn("[KeyVault] Cannot get Roblox ClientId")
+        return nil
+    end
+
+    clientId = result
+
+    -- มีไฟล์เดิม
+    if isfile and isfile(CONFIG.HWID_FILE) then
+
+        local okRead, saved = pcall(function()
+            return readfile(CONFIG.HWID_FILE)
+        end)
+
+        if okRead and saved and saved ~= "" then
+
+            saved = saved:gsub("^%s*(.-)%s*$", "%1")
+
+            if saved ~= "" then
+                print("[KeyVault] Using saved HWID")
+                return saved
+            end
+        end
+    end
+
+    -- ยังไม่มีไฟล์
+    if writefile then
+
+        pcall(function()
+            writefile(CONFIG.HWID_FILE, clientId)
+        end)
+
+        print("[KeyVault] HWID file created")
+
+    else
+
+        warn("[KeyVault] writefile is not available")
+
+    end
+
+    return clientId
+end
+
+STATE.HWID = getHWID()
 
 if STATE.HWID then
-    print("[KeyVault] Using existing HWID")
+    print("[KeyVault] HWID loaded")
 else
-    print("[KeyVault] No existing HWID supplied")
+    warn("[KeyVault] HWID unavailable")
 end
 
 -- ═══════════════════════════════════════════════
@@ -65,11 +116,14 @@ end
 -- ═══════════════════════════════════════════════
 
 pcall(function()
-    local oldGui = PlayerGui:FindFirstChild("KeyVaultLogin")
+
+    local oldGui =
+        PlayerGui:FindFirstChild("KeyVaultLogin")
 
     if oldGui then
         oldGui:Destroy()
     end
+
 end)
 
 -- ═══════════════════════════════════════════════
@@ -77,18 +131,25 @@ end)
 -- ═══════════════════════════════════════════════
 
 local UI = {
+
     Bg = Color3.fromRGB(18, 19, 24),
+
     Card = Color3.fromRGB(26, 28, 35),
+
     Input = Color3.fromRGB(35, 37, 47),
 
     Stroke = Color3.fromRGB(55, 58, 72),
 
     Text = Color3.fromRGB(255, 255, 255),
+
     SubText = Color3.fromRGB(150, 155, 170),
 
     Accent = Color3.fromRGB(100, 150, 255),
+
     Success = Color3.fromRGB(60, 220, 100),
+
     Danger = Color3.fromRGB(255, 80, 80),
+
     Warning = Color3.fromRGB(255, 200, 80),
 }
 
@@ -97,33 +158,54 @@ local UI = {
 -- ═══════════════════════════════════════════════
 
 local gui = Instance.new("ScreenGui")
+
 gui.Name = "KeyVaultLogin"
+
 gui.ResetOnSpawn = false
+
 gui.IgnoreGuiInset = true
+
 gui.DisplayOrder = 99999
+
 gui.Parent = PlayerGui
 
 -- ═══════════════════════════════════════════════
--- MAIN FRAME
+-- MAIN
 -- ═══════════════════════════════════════════════
 
 local main = Instance.new("Frame")
+
 main.Name = "Main"
-main.Size = UDim2.new(0, 320, 0, 250)
-main.Position = UDim2.new(0.5, -160, 0.5, -125)
+
+main.Size =
+    UDim2.new(0, 320, 0, 250)
+
+main.Position =
+    UDim2.new(0.5, -160, 0.5, -125)
+
 main.BackgroundColor3 = UI.Bg
+
 main.BorderSizePixel = 0
+
 main.Active = true
+
 main.Draggable = true
+
 main.Parent = gui
 
 local mainCorner = Instance.new("UICorner")
-mainCorner.CornerRadius = UDim.new(0, 14)
+
+mainCorner.CornerRadius =
+    UDim.new(0, 14)
+
 mainCorner.Parent = main
 
 local mainStroke = Instance.new("UIStroke")
+
 mainStroke.Color = UI.Stroke
+
 mainStroke.Thickness = 1
+
 mainStroke.Parent = main
 
 -- ═══════════════════════════════════════════════
@@ -131,56 +213,101 @@ mainStroke.Parent = main
 -- ═══════════════════════════════════════════════
 
 local titleBar = Instance.new("Frame")
-titleBar.Size = UDim2.new(1, 0, 0, 40)
+
+titleBar.Size =
+    UDim2.new(1, 0, 0, 40)
+
 titleBar.BackgroundColor3 = UI.Card
+
 titleBar.BorderSizePixel = 0
+
 titleBar.Parent = main
 
 local titleCorner = Instance.new("UICorner")
-titleCorner.CornerRadius = UDim.new(0, 14)
+
+titleCorner.CornerRadius =
+    UDim.new(0, 14)
+
 titleCorner.Parent = titleBar
 
 local titleFix = Instance.new("Frame")
-titleFix.Size = UDim2.new(1, 0, 0, 14)
-titleFix.Position = UDim2.new(0, 0, 1, -14)
+
+titleFix.Size =
+    UDim2.new(1, 0, 0, 14)
+
+titleFix.Position =
+    UDim2.new(0, 0, 1, -14)
+
 titleFix.BackgroundColor3 = UI.Card
+
 titleFix.BorderSizePixel = 0
+
 titleFix.Parent = titleBar
 
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -60, 1, 0)
-title.Position = UDim2.new(0, 15, 0, 0)
+
+title.Size =
+    UDim2.new(1, -60, 1, 0)
+
+title.Position =
+    UDim2.new(0, 15, 0, 0)
+
 title.BackgroundTransparency = 1
+
 title.Text = "🔐 KeyVault"
+
 title.TextColor3 = UI.Text
+
 title.Font = Enum.Font.GothamBold
+
 title.TextSize = 14
-title.TextXAlignment = Enum.TextXAlignment.Left
+
+title.TextXAlignment =
+    Enum.TextXAlignment.Left
+
 title.Parent = titleBar
 
 -- ═══════════════════════════════════════════════
--- CLOSE BUTTON
+-- CLOSE
 -- ═══════════════════════════════════════════════
 
 local close = Instance.new("TextButton")
-close.Size = UDim2.new(0, 26, 0, 26)
-close.Position = UDim2.new(1, -34, 0.5, -13)
+
+close.Size =
+    UDim2.new(0, 26, 0, 26)
+
+close.Position =
+    UDim2.new(1, -34, 0.5, -13)
+
 close.BackgroundColor3 = UI.Danger
+
 close.BackgroundTransparency = 0.8
+
 close.BorderSizePixel = 0
+
 close.Text = "×"
+
 close.TextColor3 = UI.Text
+
 close.Font = Enum.Font.GothamBold
+
 close.TextSize = 18
+
 close.AutoButtonColor = false
+
 close.Parent = titleBar
 
 local closeCorner = Instance.new("UICorner")
-closeCorner.CornerRadius = UDim.new(0, 7)
+
+closeCorner.CornerRadius =
+    UDim.new(0, 7)
+
 closeCorner.Parent = close
 
 close.MouseButton1Click:Connect(function()
+
     gui:Destroy()
+
 end)
 
 -- ═══════════════════════════════════════════════
@@ -188,13 +315,23 @@ end)
 -- ═══════════════════════════════════════════════
 
 local icon = Instance.new("TextLabel")
-icon.Size = UDim2.new(1, 0, 0, 42)
-icon.Position = UDim2.new(0, 0, 0, 49)
+
+icon.Size =
+    UDim2.new(1, 0, 0, 42)
+
+icon.Position =
+    UDim2.new(0, 0, 0, 49)
+
 icon.BackgroundTransparency = 1
+
 icon.Text = "🔑"
+
 icon.TextColor3 = UI.Accent
+
 icon.Font = Enum.Font.GothamBold
+
 icon.TextSize = 36
+
 icon.Parent = main
 
 -- ═══════════════════════════════════════════════
@@ -202,38 +339,66 @@ icon.Parent = main
 -- ═══════════════════════════════════════════════
 
 local subtitle = Instance.new("TextLabel")
-subtitle.Size = UDim2.new(1, -40, 0, 18)
-subtitle.Position = UDim2.new(0, 20, 0, 90)
+
+subtitle.Size =
+    UDim2.new(1, -40, 0, 18)
+
+subtitle.Position =
+    UDim2.new(0, 20, 0, 90)
+
 subtitle.BackgroundTransparency = 1
-subtitle.Text = "ใส่คีย์เพื่อเข้าใช้งาน XHUB"
+
+subtitle.Text =
+    "ใส่คีย์เพื่อเข้าใช้งาน XHUB"
+
 subtitle.TextColor3 = UI.SubText
+
 subtitle.Font = Enum.Font.Gotham
+
 subtitle.TextSize = 11
-subtitle.TextXAlignment = Enum.TextXAlignment.Center
+
+subtitle.TextXAlignment =
+    Enum.TextXAlignment.Center
+
 subtitle.Parent = main
 
 -- ═══════════════════════════════════════════════
 -- HWID DISPLAY
 -- ═══════════════════════════════════════════════
 
-local hwidText = "HWID: ระบบจัดการอัตโนมัติ"
+local hwidText = "HWID: ไม่พบ"
 
 if STATE.HWID then
+
     hwidText =
         "HWID: " ..
         string.sub(STATE.HWID, 1, 12) ..
         "..."
+
 end
 
 local hwidLabel = Instance.new("TextLabel")
-hwidLabel.Size = UDim2.new(1, -40, 0, 14)
-hwidLabel.Position = UDim2.new(0, 20, 0, 108)
+
+hwidLabel.Size =
+    UDim2.new(1, -40, 0, 14)
+
+hwidLabel.Position =
+    UDim2.new(0, 20, 0, 108)
+
 hwidLabel.BackgroundTransparency = 1
+
 hwidLabel.Text = hwidText
-hwidLabel.TextColor3 = Color3.fromRGB(95, 100, 115)
+
+hwidLabel.TextColor3 =
+    Color3.fromRGB(95, 100, 115)
+
 hwidLabel.Font = Enum.Font.Code
+
 hwidLabel.TextSize = 9
-hwidLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+hwidLabel.TextXAlignment =
+    Enum.TextXAlignment.Center
+
 hwidLabel.Parent = main
 
 -- ═══════════════════════════════════════════════
@@ -241,39 +406,69 @@ hwidLabel.Parent = main
 -- ═══════════════════════════════════════════════
 
 local inputFrame = Instance.new("Frame")
-inputFrame.Size = UDim2.new(1, -40, 0, 38)
-inputFrame.Position = UDim2.new(0, 20, 0, 128)
+
+inputFrame.Size =
+    UDim2.new(1, -40, 0, 38)
+
+inputFrame.Position =
+    UDim2.new(0, 20, 0, 128)
+
 inputFrame.BackgroundColor3 = UI.Input
+
 inputFrame.BorderSizePixel = 0
+
 inputFrame.Parent = main
 
 local inputCorner = Instance.new("UICorner")
-inputCorner.CornerRadius = UDim.new(0, 8)
+
+inputCorner.CornerRadius =
+    UDim.new(0, 8)
+
 inputCorner.Parent = inputFrame
 
 local inputStroke = Instance.new("UIStroke")
+
 inputStroke.Color = UI.Stroke
+
 inputStroke.Thickness = 1
+
 inputStroke.Parent = inputFrame
 
 -- ═══════════════════════════════════════════════
--- INPUT BOX
+-- INPUT
 -- ═══════════════════════════════════════════════
 
 local input = Instance.new("TextBox")
-input.Size = UDim2.new(1, -20, 1, 0)
-input.Position = UDim2.new(0, 10, 0, 0)
+
+input.Size =
+    UDim2.new(1, -20, 1, 0)
+
+input.Position =
+    UDim2.new(0, 10, 0, 0)
+
 input.BackgroundTransparency = 1
+
 input.BorderSizePixel = 0
+
 input.ClearTextOnFocus = false
+
 input.Text = ""
-input.PlaceholderText = "ใส่คีย์ที่นี่..."
+
+input.PlaceholderText =
+    "ใส่คีย์ที่นี่..."
+
 input.PlaceholderColor3 =
     Color3.fromRGB(100, 105, 120)
+
 input.TextColor3 = UI.Text
+
 input.Font = Enum.Font.Gotham
+
 input.TextSize = 13
-input.TextXAlignment = Enum.TextXAlignment.Left
+
+input.TextXAlignment =
+    Enum.TextXAlignment.Left
+
 input.Parent = inputFrame
 
 -- ═══════════════════════════════════════════════
@@ -281,14 +476,26 @@ input.Parent = inputFrame
 -- ═══════════════════════════════════════════════
 
 local status = Instance.new("TextLabel")
-status.Size = UDim2.new(1, -40, 0, 18)
-status.Position = UDim2.new(0, 20, 0, 171)
+
+status.Size =
+    UDim2.new(1, -40, 0, 18)
+
+status.Position =
+    UDim2.new(0, 20, 0, 171)
+
 status.BackgroundTransparency = 1
+
 status.Text = ""
+
 status.TextColor3 = UI.SubText
+
 status.Font = Enum.Font.Gotham
+
 status.TextSize = 10
-status.TextXAlignment = Enum.TextXAlignment.Center
+
+status.TextXAlignment =
+    Enum.TextXAlignment.Center
+
 status.Parent = main
 
 -- ═══════════════════════════════════════════════
@@ -296,19 +503,34 @@ status.Parent = main
 -- ═══════════════════════════════════════════════
 
 local login = Instance.new("TextButton")
-login.Size = UDim2.new(1, -40, 0, 36)
-login.Position = UDim2.new(0, 20, 0, 199)
+
+login.Size =
+    UDim2.new(1, -40, 0, 36)
+
+login.Position =
+    UDim2.new(0, 20, 0, 199)
+
 login.BackgroundColor3 = UI.Accent
+
 login.BorderSizePixel = 0
+
 login.Text = "เข้าสู่ระบบ"
+
 login.TextColor3 = UI.Text
+
 login.Font = Enum.Font.GothamBold
+
 login.TextSize = 13
+
 login.AutoButtonColor = false
+
 login.Parent = main
 
 local loginCorner = Instance.new("UICorner")
-loginCorner.CornerRadius = UDim.new(0, 8)
+
+loginCorner.CornerRadius =
+    UDim.new(0, 8)
+
 loginCorner.Parent = login
 
 -- ═══════════════════════════════════════════════
@@ -318,7 +540,58 @@ loginCorner.Parent = login
 local function setStatus(text, color)
 
     status.Text = text
+
     status.TextColor3 = color
+
+end
+
+-- ═══════════════════════════════════════════════
+-- REQUEST HELPER
+-- ═══════════════════════════════════════════════
+
+local function sendRequest(url, body)
+
+    local ok, response = pcall(function()
+
+        return request({
+
+            Method = "POST",
+
+            Url = url,
+
+            Headers = {
+                ["Content-Type"] =
+                    "application/json"
+            },
+
+            Body = body
+
+        })
+
+    end)
+
+    if not ok then
+
+        warn(
+            "[KeyVault] Request Error:",
+            response
+        )
+
+        return false, nil
+
+    end
+
+    print(
+        "[KeyVault] HTTP Status:",
+        response.StatusCode
+    )
+
+    print(
+        "[KeyVault] HTTP Body:",
+        response.Body
+    )
+
+    return true, response
 
 end
 
@@ -328,47 +601,42 @@ end
 
 local function validateKey(key)
 
-    local body = HttpService:JSONEncode({
-        key = key,
+    if not STATE.HWID then
 
-        -- ใช้ HWID เดิมเท่านั้น
-        hwid = STATE.HWID,
+        return false,
+            "❌ ไม่พบ HWID"
 
-        username = LocalPlayer.Name
-    })
+    end
 
-    local ok, response = pcall(function()
+    local body =
+        HttpService:JSONEncode({
 
-        return HttpService:RequestAsync({
+            key = key,
 
-            Url = CONFIG.API_VALIDATE,
+            hwid = STATE.HWID,
 
-            Method = "POST",
+            username =
+                LocalPlayer.Name
 
-            Headers = {
-                ["Content-Type"] = "application/json"
-            },
-
-            Body = body
         })
 
-    end)
-
-    if not ok then
-
-        warn(
-            "[KeyVault] HTTP Error:",
-            response
+    local requestOK, response =
+        sendRequest(
+            CONFIG.API_VALIDATE,
+            body
         )
+
+    if not requestOK then
 
         return false,
             "❌ เชื่อมต่อเซิร์ฟเวอร์ไม่ได้"
+
     end
 
     if not response.Success then
 
         warn(
-            "[KeyVault] API Error:",
+            "[KeyVault] Validate HTTP Error:",
             response.StatusCode,
             response.Body
         )
@@ -376,44 +644,47 @@ local function validateKey(key)
         return false,
             "❌ Server Error " ..
             tostring(response.StatusCode)
+
     end
 
-    local jsonOk, data = pcall(function()
+    local jsonOK, data =
+        pcall(function()
 
-        return HttpService:JSONDecode(
-            response.Body
-        )
+            return HttpService:JSONDecode(
+                response.Body
+            )
 
-    end)
+        end)
 
-    if not jsonOk then
-
-        warn(
-            "[KeyVault] JSON Error:",
-            response.Body
-        )
+    if not jsonOK then
 
         return false,
-            "❌ ข้อมูลจากเซิร์ฟเวอร์ผิดรูปแบบ"
+            "❌ Server ส่งข้อมูลไม่ถูกต้อง"
+
     end
 
     if data.success then
 
         STATE.Token = data.token
+
         STATE.IsValidated = true
 
-        -- ถ้า API ส่ง HWID กลับมา
-        -- ใช้ค่าที่ Server ยืนยัน
-        if data.hwid then
+        -- ถ้า Server ส่ง HWID ที่ยืนยันกลับมา
+        if data.hwid
+            and data.hwid ~= "" then
+
             STATE.HWID = data.hwid
+
         end
 
         return true, data.payload
+
     end
 
     return false,
         data.message or
         "❌ คีย์ไม่ถูกต้อง"
+
 end
 
 -- ═══════════════════════════════════════════════
@@ -430,7 +701,10 @@ local function loadPayload(code)
             UI.Danger
         )
 
+        login.Interactable = true
+
         return
+
     end
 
     setStatus(
@@ -440,16 +714,17 @@ local function loadPayload(code)
 
     task.wait(0.4)
 
-    local ok, fn = pcall(function()
+    local compileOK, fn =
+        pcall(function()
 
-        return loadstring(code)
+            return loadstring(code)
 
-    end)
+        end)
 
-    if not ok or not fn then
+    if not compileOK or not fn then
 
         warn(
-            "[KeyVault] Payload Error:",
+            "[KeyVault] Payload Compile Error:",
             fn
         )
 
@@ -461,6 +736,7 @@ local function loadPayload(code)
         login.Interactable = true
 
         return
+
     end
 
     setStatus(
@@ -469,7 +745,9 @@ local function loadPayload(code)
     )
 
     login.Text = "✓ สำเร็จ"
-    login.BackgroundColor3 = UI.Success
+
+    login.BackgroundColor3 =
+        UI.Success
 
     task.wait(0.8)
 
@@ -479,9 +757,10 @@ local function loadPayload(code)
 
     task.wait(0.3)
 
-    local runOk, runError = pcall(fn)
+    local runOK, runError =
+        pcall(fn)
 
-    if not runOk then
+    if not runOK then
 
         warn(
             "[KeyVault] Payload Runtime Error:",
@@ -489,10 +768,11 @@ local function loadPayload(code)
         )
 
     end
+
 end
 
 -- ═══════════════════════════════════════════════
--- LOGIN FUNCTION
+-- LOGIN
 -- ═══════════════════════════════════════════════
 
 local function doLogin()
@@ -517,12 +797,16 @@ local function doLogin()
         input:CaptureFocus()
 
         return
+
     end
 
     STATE.Checking = true
 
     login.Interactable = false
-    login.Text = "กำลังตรวจสอบ..."
+
+    login.Text =
+        "กำลังตรวจสอบ..."
+
     login.BackgroundColor3 =
         Color3.fromRGB(70, 105, 175)
 
@@ -536,20 +820,20 @@ local function doLogin()
 
     if success then
 
-        print("[KeyVault] Validate Success")
+        print(
+            "[KeyVault] Validate Success"
+        )
 
         loadPayload(result)
 
         STATE.Checking = false
 
         return
+
     end
 
-    -- ═════════════════════════════════════════
-    -- FAILED
-    -- ═════════════════════════════════════════
-
     STATE.Checking = false
+
     STATE.IsValidated = false
 
     warn(
@@ -562,11 +846,15 @@ local function doLogin()
         UI.Danger
     )
 
-    login.Text = "ลองอีกครั้ง"
-    login.BackgroundColor3 = UI.Danger
+    login.Text =
+        "ลองอีกครั้ง"
+
+    login.BackgroundColor3 =
+        UI.Danger
+
     login.Interactable = true
 
-    -- Shake animation
+    -- Shake
     local originalPosition =
         main.Position
 
@@ -574,24 +862,30 @@ local function doLogin()
 
         TweenService:Create(
             main,
+
             TweenInfo.new(0.05),
+
             {
                 Position =
                     originalPosition +
                     UDim2.new(0, 7, 0, 0)
             }
+
         ):Play()
 
         task.wait(0.05)
 
         TweenService:Create(
             main,
+
             TweenInfo.new(0.05),
+
             {
                 Position =
                     originalPosition -
                     UDim2.new(0, 7, 0, 0)
             }
+
         ):Play()
 
         task.wait(0.05)
@@ -600,10 +894,14 @@ local function doLogin()
 
     TweenService:Create(
         main,
+
         TweenInfo.new(0.1),
+
         {
-            Position = originalPosition
+            Position =
+                originalPosition
         }
+
     ):Play()
 
     task.delay(1.5, function()
@@ -614,7 +912,9 @@ local function doLogin()
 
         if not STATE.Checking then
 
-            login.Text = "เข้าสู่ระบบ"
+            login.Text =
+                "เข้าสู่ระบบ"
+
             login.BackgroundColor3 =
                 UI.Accent
 
@@ -625,6 +925,7 @@ local function doLogin()
         end
 
     end)
+
 end
 
 -- ═══════════════════════════════════════════════
@@ -647,16 +948,10 @@ input.FocusLost:Connect(function(
 
     inputStroke.Color = UI.Stroke
 
-    TweenService:Create(
-        inputStroke,
-        TweenInfo.new(0.15),
-        {
-            Thickness = 1
-        }
-    ):Play()
-
     if enterPressed then
+
         doLogin()
+
     end
 
 end)
@@ -667,15 +962,8 @@ end)
 
 input.Focused:Connect(function()
 
-    inputStroke.Color = UI.Accent
-
-    TweenService:Create(
-        inputStroke,
-        TweenInfo.new(0.15),
-        {
-            Thickness = 1.5
-        }
-    ):Play()
+    inputStroke.Color =
+        UI.Accent
 
 end)
 
@@ -690,6 +978,7 @@ main.Position =
     UDim2.new(0.5, 0, 0.5, 0)
 
 TweenService:Create(
+
     main,
 
     TweenInfo.new(
@@ -731,37 +1020,34 @@ task.spawn(function()
             local body =
                 HttpService:JSONEncode({
 
-                    token = STATE.Token,
+                    token =
+                        STATE.Token,
 
-                    hwid = STATE.HWID
+                    hwid =
+                        STATE.HWID
+
                 })
 
-            local ok, response =
-                pcall(function()
+            local requestOK, response =
+                sendRequest(
+                    CONFIG.API_HEARTBEAT,
+                    body
+                )
 
-                    return HttpService:RequestAsync({
-
-                        Url =
-                            CONFIG.API_HEARTBEAT,
-
-                        Method = "POST",
-
-                        Headers = {
-                            ["Content-Type"] =
-                                "application/json"
-                        },
-
-                        Body = body
-                    })
-
-                end)
-
-            if not ok then
+            if not requestOK then
 
                 warn(
-                    "[KeyVault] Heartbeat Error:",
-                    response
+                    "[KeyVault] Heartbeat Request Error"
                 )
+
+            elseif response.StatusCode == 401 then
+
+                warn(
+                    "[KeyVault] Key invalidated"
+                )
+
+                STATE.Token = nil
+                STATE.IsValidated = false
 
             elseif not response.Success then
 
@@ -771,11 +1057,9 @@ task.spawn(function()
                     response.Body
                 )
 
-                STATE.IsValidated = false
-
             else
 
-                local jsonOk, data =
+                local jsonOK, data =
                     pcall(function()
 
                         return HttpService:JSONDecode(
@@ -784,7 +1068,8 @@ task.spawn(function()
 
                     end)
 
-                if jsonOk and data.success then
+                if jsonOK
+                    and data.success then
 
                     print(
                         "[KeyVault] Heartbeat OK"
@@ -793,12 +1078,11 @@ task.spawn(function()
                 else
 
                     warn(
-                        "[KeyVault] Heartbeat Invalid"
+                        "[KeyVault] Invalid Heartbeat Response"
                     )
 
-                    STATE.IsValidated = false
-
                 end
+
             end
         end
     end
@@ -811,7 +1095,10 @@ end)
 _G.KeyVaultCleanup = function()
 
     STATE.IsValidated = false
+
     STATE.Checking = false
+
+    STATE.Token = nil
 
     if gui and gui.Parent then
         gui:Destroy()
@@ -819,5 +1106,14 @@ _G.KeyVaultCleanup = function()
 
 end
 
+-- ═══════════════════════════════════════════════
+-- READY
+-- ═══════════════════════════════════════════════
+
 print("[KeyVault] Ready")
-print("[KeyVault] Existing HWID:", STATE.HWID)
+
+if STATE.HWID then
+    print("[KeyVault] HWID loaded successfully")
+else
+    warn("[KeyVault] HWID is unavailable")
+end
