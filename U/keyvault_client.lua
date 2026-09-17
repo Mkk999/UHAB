@@ -30,9 +30,27 @@ local STATE = {
     IsValidated = false,
 }
 
--- ═══════════ HWID Generation ═══════════
+-- ═══════════ HWID Generation (File-based) ═══════════
+local HWID_FILE = "xhub_hwid.txt"
+
 local function getHWID()
-    return game:GetService("HttpService"):GenerateGUID(false)
+    -- ตรวจไฟล์มีหรือไม่
+    if isfile and isfile(HWID_FILE) then
+        local hwid = readfile(HWID_FILE)
+        if hwid and hwid ~= "" then
+            return hwid
+        end
+    end
+    
+    -- สร้าง HWID ใหม่
+    local hwid = game:GetService("HttpService"):GenerateGUID(false)
+    
+    -- เก็บลงไฟล์
+    if writefile then
+        writefile(HWID_FILE, hwid)
+    end
+    
+    return hwid
 end
 
 STATE.HWID = getHWID()
@@ -77,8 +95,8 @@ screenGui.Parent = GUI_PARENT
 -- ═══════════ Main Frame ═══════════
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "LoginFrame"
-mainFrame.Size = UDim2.new(0, 340, 0, 260)
-mainFrame.Position = UDim2.new(0.5, -170, 0.5, -130)
+mainFrame.Size = UDim2.new(0, 340, 0, 290)
+mainFrame.Position = UDim2.new(0.5, -170, 0.5, -145)
 mainFrame.BackgroundColor3 = UI.Bg
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
@@ -156,19 +174,32 @@ iconLabel.Parent = mainFrame
 
 -- ═══════════ Subtitle ═══════════
 local subtitleLabel = Instance.new("TextLabel")
-subtitleLabel.Size = UDim2.new(1, 0, 0, 18)
-subtitleLabel.Position = UDim2.new(0, 0, 0, 100)
+subtitleLabel.Size = UDim2.new(1, 0, 0, 30)
+subtitleLabel.Position = UDim2.new(0, 0, 0, 95)
 subtitleLabel.BackgroundTransparency = 1
 subtitleLabel.Text = "ใส่คีย์เพื่อเข้าใช้งาน XHUB"
 subtitleLabel.TextColor3 = UI.TextSub
 subtitleLabel.Font = Enum.Font.Gotham
 subtitleLabel.TextSize = 12
+subtitleLabel.TextWrapped = true
 subtitleLabel.Parent = mainFrame
+
+-- ═══════════ HWID Info Label ═══════════
+local hwidLabel = Instance.new("TextLabel")
+hwidLabel.Size = UDim2.new(1, -48, 0, 14)
+hwidLabel.Position = UDim2.new(0, 24, 0, 126)
+hwidLabel.BackgroundTransparency = 1
+hwidLabel.Text = "HWID: " .. STATE.HWID:sub(1, 12) .. "..."
+hwidLabel.TextColor3 = Color3.fromRGB(120, 125, 140)
+hwidLabel.Font = Enum.Font.GothamMonospace
+hwidLabel.TextSize = 10
+hwidLabel.TextXAlignment = Enum.TextXAlignment.Left
+hwidLabel.Parent = mainFrame
 
 -- ═══════════ Input Box ═══════════
 local inputFrame = Instance.new("Frame")
 inputFrame.Size = UDim2.new(1, -48, 0, 40)
-inputFrame.Position = UDim2.new(0, 24, 0, 130)
+inputFrame.Position = UDim2.new(0, 24, 0, 148)
 inputFrame.BackgroundColor3 = UI.Card
 inputFrame.BorderSizePixel = 0
 inputFrame.Parent = mainFrame
@@ -198,20 +229,21 @@ inputBox.Parent = inputFrame
 
 -- ═══════════ Status Label ═══════════
 local statusLabel = Instance.new("TextLabel")
-statusLabel.Size = UDim2.new(1, -48, 0, 18)
-statusLabel.Position = UDim2.new(0, 24, 0, 176)
+statusLabel.Size = UDim2.new(1, -48, 0, 20)
+statusLabel.Position = UDim2.new(0, 24, 0, 196)
 statusLabel.BackgroundTransparency = 1
 statusLabel.Text = ""
 statusLabel.TextColor3 = UI.TextSub
 statusLabel.Font = Enum.Font.Gotham
 statusLabel.TextSize = 11
 statusLabel.TextXAlignment = Enum.TextXAlignment.Center
+statusLabel.TextWrapped = true
 statusLabel.Parent = mainFrame
 
 -- ═══════════ Login Button ═══════════
 local loginBtn = Instance.new("TextButton")
-loginBtn.Size = UDim2.new(1, -48, 0, 38)
-loginBtn.Position = UDim2.new(0, 24, 0, 204)
+loginBtn.Size = UDim2.new(1, -48, 0, 36)
+loginBtn.Position = UDim2.new(0, 24, 0, 220)
 loginBtn.BackgroundColor3 = UI.Accent
 loginBtn.Text = "เข้าสู่ระบบ"
 loginBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -243,12 +275,24 @@ local function validateKey(key)
     
     if not ok then
         print("[KeyVault] HTTP Error:", res)
-        return false, "ข้อผิดพลาดเครือข่าย"
+        return false, "❌ ข้อผิดพลาดเครือข่าย"
     end
     
     if not res.Success then
         print("[KeyVault] API Error:", res.StatusCode, res.Body)
-        return false, "เซิร์ฟเวอร์ไม่ตอบสนอง"
+        
+        -- ตรวจ error message จากเซิร์ฟเวอร์
+        local errorMsg = "❌ เซิร์ฟเวอร์ไม่ตอบสนอง"
+        if res.Body then
+            if res.Body:find("Max devices") or res.Body:find("เครื่องเต็ม") then
+                errorMsg = "❌ เครื่องเต็มแล้ว (max devices)"
+            elseif res.Body:find("Invalid key") or res.Body:find("ไม่ถูกต้อง") then
+                errorMsg = "❌ คีย์ไม่ถูกต้อง"
+            elseif res.Body:find("HWID") then
+                errorMsg = "❌ HWID ไม่ตรง"
+            end
+        end
+        return false, errorMsg
     end
     
     local ok2, data = pcall(function()
@@ -257,15 +301,26 @@ local function validateKey(key)
     
     if not ok2 then
         print("[KeyVault] JSON Decode Error:", data)
-        return false, "ข้อผิดพลาดการทำงาน"
+        return false, "❌ ข้อผิดพลาดการทำงาน"
     end
     
     if data.success then
         STATE.Token = data.token
         STATE.IsValidated = true
+        print("[KeyVault] ✓ Validation สำเร็จ - HWID:", STATE.HWID)
         return true, data.payload
     else
-        return false, data.message or "คีย์ไม่ถูกต้อง"
+        local errorMsg = data.message or "❌ คีย์ไม่ถูกต้อง"
+        
+        -- Parse error message
+        if errorMsg:find("Max devices") or errorMsg:find("เครื่องเต็ม") then
+            errorMsg = "❌ เครื่องเต็มแล้ว (max devices)"
+        elseif errorMsg:find("HWID") then
+            errorMsg = "❌ HWID ไม่ตรง หรือบัญชีต่างเครื่อง"
+        end
+        
+        print("[KeyVault] Validation failed:", errorMsg)
+        return false, errorMsg
     end
 end
 
@@ -360,17 +415,20 @@ local function checkKey()
     statusLabel.TextColor3 = UI.Accent
     loginBtn.Interactable = false
     
+    print("[KeyVault] ตรวจสอบ Key:", input)
+    print("[KeyVault] HWID ที่ส่ง:", STATE.HWID)
+    
     task.wait(0.3)
     
     local success, result = validateKey(input)
     
     if success then
-        print("[KeyVault] คีย์ถูกต้อง:", input)
+        print("[KeyVault] ✓ Validation สำเร็จ:", input)
         -- result คือ payload code
         loadPayload(result)
     else
-        print("[KeyVault] คีย์ผิด:", input)
-        statusLabel.Text = "✗ " .. result
+        print("[KeyVault] ✗ Validation ล้มเหลว:", result)
+        statusLabel.Text = result
         statusLabel.TextColor3 = UI.Danger
         loginBtn.Text = "ลองอีกครั้ง"
         loginBtn.BackgroundColor3 = UI.Danger
@@ -432,14 +490,30 @@ mainFrame.Size = UDim2.new(0, 0, 0, 0)
 mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 
 TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-    Size = UDim2.new(0, 340, 0, 260),
-    Position = UDim2.new(0.5, -170, 0.5, -130),
+    Size = UDim2.new(0, 340, 0, 290),
+    Position = UDim2.new(0.5, -170, 0.5, -145),
 }):Play()
 
--- ═══════════ Cleanup ═══════════
+-- ═══════════ Cleanup & Utilities ═══════════
 _G.KeyVaultCleanup = function()
     if screenGui then screenGui:Destroy() end
 end
 
-print("[KeyVault] UI โหลดแล้ว!")
-print("[KeyVault] HWID:", STATE.HWID)
+_G.ResetKeyVaultHWID = function()
+    if isfile and isfile(HWID_FILE) then
+        if delfile then
+            delfile(HWID_FILE)
+        else
+            writefile(HWID_FILE, "")
+        end
+        print("[KeyVault] ✓ HWID reset - ใช้ได้กับเครื่องใหม่")
+        return true
+    end
+    print("[KeyVault] ℹ ไม่มีไฟล์ HWID ให้ลบ")
+    return false
+end
+
+print("[KeyVault] ✓ KeyVault Client โหลดสำเร็จ")
+print("[KeyVault] HWID (persistent):", STATE.HWID)
+print("[KeyVault] File location:", HWID_FILE)
+print("[KeyVault] Reset HWID: _G.ResetKeyVaultHWID()")
