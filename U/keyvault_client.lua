@@ -233,22 +233,30 @@ local function validateKey(key)
     })
     
     local ok, res = pcall(function()
-        return HttpService:PostAsync(
-            CONFIG.API_VALIDATE,
-            body,
-            Enum.HttpContentType.ApplicationJson
-        )
+        return HttpService:RequestAsync({
+            Url = CONFIG.API_VALIDATE,
+            Method = "POST",
+            Headers = { ["Content-Type"] = "application/json" },
+            Body = body
+        })
     end)
     
     if not ok then
+        print("[KeyVault] HTTP Error:", res)
         return false, "ข้อผิดพลาดเครือข่าย"
     end
     
+    if not res.Success then
+        print("[KeyVault] API Error:", res.StatusCode, res.Body)
+        return false, "เซิร์ฟเวอร์ไม่ตอบสนอง"
+    end
+    
     local ok2, data = pcall(function()
-        return HttpService:JSONDecode(res)
+        return HttpService:JSONDecode(res.Body)
     end)
     
     if not ok2 then
+        print("[KeyVault] JSON Decode Error:", data)
         return false, "ข้อผิดพลาดการทำงาน"
     end
     
@@ -271,20 +279,27 @@ local function sendHeartbeat()
     })
     
     local ok, res = pcall(function()
-        return HttpService:PostAsync(
-            CONFIG.API_HEARTBEAT,
-            body,
-            Enum.HttpContentType.ApplicationJson
-        )
+        return HttpService:RequestAsync({
+            Url = CONFIG.API_HEARTBEAT,
+            Method = "POST",
+            Headers = { ["Content-Type"] = "application/json" },
+            Body = body
+        })
     end)
     
     if not ok then
-        print("[KeyVault] Heartbeat ล้มเหลว")
+        print("[KeyVault] Heartbeat ล้มเหลว:", res)
+        return
+    end
+    
+    if not res.Success then
+        print("[KeyVault] Heartbeat ข้อผิดพลาด:", res.StatusCode)
+        STATE.IsValidated = false
         return
     end
     
     local ok2, data = pcall(function()
-        return HttpService:JSONDecode(res)
+        return HttpService:JSONDecode(res.Body)
     end)
     
     if ok2 and data.success then
