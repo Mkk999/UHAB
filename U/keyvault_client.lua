@@ -1,35 +1,47 @@
 --[[ Protected by Lua Guard ]]
 
-(function(...) 
---"\091\010\032\032\032\032\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\010\032\032\032\032\075\101\121\086\097\117\108\116\032\076\111\103\105\110\032\067\108\105\101\110\116\010\032\032\032\032\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\9472\010\032\032\032\032\8226\032\067\108\105\101\110\116\032\073\068\032\3592\3634\3585\032\082\111\098\108\111\120\010\032\032\032\032\8226\032\3652\3617\3656\3651\3594\3657\032\120\104\117\098\095\104\119\105\100\046\116\120\116\010\032\032\032\032\8226\032\076\111\103\105\110\032\085\073\010\032\032\032\032\8226\032\3611\3640\3656\3617\032\076\111\103\105\110\032\047\032\069\110\116\101\114\010\032\032\032\032\8226\032\086\097\108\105\100\097\116\101\032\075\101\121\010\032\032\032\032\8226\032\072\101\097\114\116\098\101\097\116\010\032\032\032\032\8226\032\065\117\116\111\045\108\111\097\100\032\080\097\121\108\111\097\100\010\032\032\032\032\8226\032\3649\3626\3604\3591\032\065\080\073\032\069\114\114\111\114\032\3626\3635\3627\3619\3633\3610\032\068\101\098\117\103\010\032\032\032\032\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\9552\010\093"
+--[[
+    ═══════════════════════════════════════════════
+    KeyVault Login Client
+    ─────────────────────────────────────────────
+    • Client ID จาก Roblox
+    • ไม่ใช้ xhub_hwid.txt
+    • Login UI
+    • ปุ่ม Login / Enter
+    • Validate Key
+    • Heartbeat
+    • Auto-load Payload
+    • แสดง API Error สำหรับ Debug
+    ═══════════════════════════════════════════════
+]]
 
-local Players = game:GetService("\080\108\097\121\101\114\115")
-local TweenService = game:GetService("\084\119\101\101\110\083\101\114\118\105\099\101")
-local HttpService = game:GetService("\072\116\116\112\083\101\114\118\105\099\101")
-local _IlIlIIIIlI = game:GetService("\082\098\120\065\110\097\108\121\116\105\099\115\083\101\114\118\105\099\101")
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
+local _llllIIlIll = game:GetService("RbxAnalyticsService")
 
-local _IllllIIIll = Players.LocalPlayer
-local _IlIlIlllIl = _IllllIIIll:WaitForChild("\080\108\097\121\101\114\071\117\105")
+local _IlIllIIlII = Players.LocalPlayer
+local _IllllllllI = _IlIllIIlII:WaitForChild("PlayerGui")
 
 -- ═══════════════════════════════════════════════
--- _lIllllIIll
+-- _IllllllIll
 -- ═══════════════════════════════════════════════
 
-local _lIllllIIll = {
+local _IllllllIll = {
     API_VALIDATE =
-        "\104\116\116\112\115\058\047\047\107\101\121\045\103\097\116\101\045\109\097\110\097\103\101\114\045\099\111\112\121\045\053\049\053\098\050\056\100\053\046\098\097\115\101\052\052\046\097\112\112\047\102\117\110\099\116\105\111\110\115\047\118\097\108\105\100\097\116\101\075\101\121",
+        "https://key-gate-manager-copy-515b28d5.base44.app/functions/validateKey",
 
     API_HEARTBEAT =
-        "\104\116\116\112\115\058\047\047\107\101\121\045\103\097\116\101\045\109\097\110\097\103\101\114\045\099\111\112\121\045\053\049\053\098\050\056\100\053\046\098\097\115\101\052\052\046\097\112\112\047\102\117\110\099\116\105\111\110\115\047\104\101\097\114\116\098\101\097\116",
+        "https://key-gate-manager-copy-515b28d5.base44.app/functions/heartbeat",
 
-    HEARTBEAT_INTERVAL = 0x2D
+    HEARTBEAT_INTERVAL = 45
 }
 
 -- ═══════════════════════════════════════════════
--- _IIlIlIlIIl
+-- _IIIlIlIllI
 -- ═══════════════════════════════════════════════
 
-local _IIlIlIlIIl = {
+local _IIIlIlIllI = {
     Token = nil,
     HWID = nil,
     IsValidated = false,
@@ -40,15 +52,15 @@ local _IIlIlIlIIl = {
 -- HWID / CLIENT ID
 -- ═══════════════════════════════════════════════
 
-local function _lIIIllIlll()
+local function _IlIIIIllIl()
 
-    local _lIIllIlllI, clientId = pcall(function()
-        return _IlIlIIIIlI:GetClientId()
+    local _lIIlIlllIl, clientId = pcall(function()
+        return _llllIIlIll:GetClientId()
     end)
 
-    if not _lIIllIlllI then
+    if not _lIIlIlllIl then
         warn(
-            "\091\075\101\121\086\097\117\108\116\093\032\067\097\110\110\111\116\032\103\101\116\032\082\111\098\108\111\120\032\067\108\105\101\110\116\073\100\058",
+            "[KeyVault] Cannot get Roblox ClientId:",
             clientId
         )
 
@@ -59,25 +71,25 @@ local function _lIIIllIlll()
         or clientId == "" then
 
         warn(
-            "\091\075\101\121\086\097\117\108\116\093\032\082\111\098\108\111\120\032\067\108\105\101\110\116\073\100\032\105\115\032\101\109\112\116\121"
+            "[KeyVault] Roblox ClientId is empty"
         )
 
         return nil
     end
 
     print(
-        "\091\075\101\121\086\097\117\108\116\093\032\067\108\105\101\110\116\032\073\068\032\111\098\116\097\105\110\101\100"
+        "[KeyVault] Client ID obtained"
     )
 
     return clientId
 end
 
-_IIlIlIlIIl.HWID = _lIIIllIlll()
+_IIIlIlIllI.HWID = _IlIIIIllIl()
 
-if _IIlIlIlIIl.HWID then
-    print("\091\075\101\121\086\097\117\108\116\093\032\072\087\073\068\032\108\111\097\100\101\100\032\115\117\099\099\101\115\115\102\117\108\108\121")
+if _IIIlIlIllI.HWID then
+    print("[KeyVault] HWID loaded successfully")
 else
-    warn("\091\075\101\121\086\097\117\108\116\093\032\072\087\073\068\032\117\110\097\118\097\105\108\097\098\108\101")
+    warn("[KeyVault] HWID unavailable")
 end
 
 -- ═══════════════════════════════════════════════
@@ -86,11 +98,11 @@ end
 
 pcall(function()
 
-    local _lIIllIllIl =
-        _IlIlIlllIl:FindFirstChild("\075\101\121\086\097\117\108\116\076\111\103\105\110")
+    local _IlIIlIIIlI =
+        _IllllllllI:FindFirstChild("KeyVaultLogin")
 
-    if _lIIllIllIl then
-        _lIIllIllIl:Destroy()
+    if _IlIIlIIIlI then
+        _IlIIlIIIlI:Destroy()
     end
 
 end)
@@ -99,183 +111,183 @@ end)
 -- COLORS
 -- ═══════════════════════════════════════════════
 
-local _IIIlllIlII = {
+local _llIlIlllII = {
 
-    Bg = Color3.fromRGB(0x12, 0x13, 0x18),
+    Bg = Color3.fromRGB(18, 19, 24),
 
-    Card = Color3.fromRGB(0x1A, 0x1C, 0x23),
+    Card = Color3.fromRGB(26, 28, 35),
 
-    Input = Color3.fromRGB(0x23, 0x25, 0x2F),
+    Input = Color3.fromRGB(35, 37, 47),
 
-    Stroke = Color3.fromRGB(0x37, 0x3A, 0x48),
+    Stroke = Color3.fromRGB(55, 58, 72),
 
-    Text = Color3.fromRGB(0xFF, 0xFF, 0xFF),
+    Text = Color3.fromRGB(255, 255, 255),
 
-    SubText = Color3.fromRGB(0x96, 0x9B, 0xAA),
+    SubText = Color3.fromRGB(150, 155, 170),
 
-    Accent = Color3.fromRGB(0x64, 0x96, 0xFF),
+    Accent = Color3.fromRGB(100, 150, 255),
 
-    Success = Color3.fromRGB(0x3C, 0xDC, 0x64),
+    Success = Color3.fromRGB(60, 220, 100),
 
-    Danger = Color3.fromRGB(0xFF, 0x50, 0x50),
+    Danger = Color3.fromRGB(255, 80, 80),
 
-    Warning = Color3.fromRGB(0xFF, 0xC8, 0x50),
+    Warning = Color3.fromRGB(255, 200, 80),
 }
 
 -- ═══════════════════════════════════════════════
 -- SCREEN GUI
 -- ═══════════════════════════════════════════════
 
-local _lllIIlIIIl = Instance.new("\083\099\114\101\101\110\071\117\105")
+local _lIIIIlIIlI = Instance.new("ScreenGui")
 
-_lllIIlIIIl.Name = "\075\101\121\086\097\117\108\116\076\111\103\105\110"
+_lIIIIlIIlI.Name = "KeyVaultLogin"
 
-_lllIIlIIIl.ResetOnSpawn = false
+_lIIIIlIIlI.ResetOnSpawn = false
 
-_lllIIlIIIl.IgnoreGuiInset = true
+_lIIIIlIIlI.IgnoreGuiInset = true
 
-_lllIIlIIIl.DisplayOrder = 0x1869F
+_lIIIIlIIlI.DisplayOrder = 99999
 
-_lllIIlIIIl.Parent = _IlIlIlllIl
+_lIIIIlIIlI.Parent = _IllllllllI
 
 -- ═══════════════════════════════════════════════
 -- MAIN
 -- ═══════════════════════════════════════════════
 
-local _lIllIlllII = Instance.new("\070\114\097\109\101")
+local _lIIIlIlIII = Instance.new("Frame")
 
-_lIllIlllII.Name = "\077\097\105\110"
+_lIIIlIlIII.Name = "Main"
 
-_lIllIlllII.Size =
-    UDim2.new(0x0, 0x140, 0x0, 0xFA)
+_lIIIlIlIII.Size =
+    UDim2.new(0, 320, 0, 250)
 
-_lIllIlllII.Position =
-    UDim2.new(0.5, -0xA0, 0.5, -0x7D)
+_lIIIlIlIII.Position =
+    UDim2.new(0.5, -160, 0.5, -125)
 
-_lIllIlllII.BackgroundColor3 = _IIIlllIlII.Bg
+_lIIIlIlIII.BackgroundColor3 = _llIlIlllII.Bg
 
-_lIllIlllII.BorderSizePixel = 0x0
+_lIIIlIlIII.BorderSizePixel = 0
 
-_lIllIlllII.Active = true
+_lIIIlIlIII.Active = true
 
-_lIllIlllII.Draggable = true
+_lIIIlIlIII.Draggable = true
 
-_lIllIlllII.Parent = _lllIIlIIIl
+_lIIIlIlIII.Parent = _lIIIIlIIlI
 
-local _lllIIlIIll = Instance.new("\085\073\067\111\114\110\101\114")
+local _lllllllIII = Instance.new("UICorner")
 
-_lllIIlIIll.CornerRadius =
-    UDim.new(0x0, 0xE)
+_lllllllIII.CornerRadius =
+    UDim.new(0, 14)
 
-_lllIIlIIll.Parent = _lIllIlllII
+_lllllllIII.Parent = _lIIIlIlIII
 
-local _lIlIlIlIIl = Instance.new("\085\073\083\116\114\111\107\101")
+local _llllllIIII = Instance.new("UIStroke")
 
-_lIlIlIlIIl.Color = _IIIlllIlII.Stroke
+_llllllIIII.Color = _llIlIlllII.Stroke
 
-_lIlIlIlIIl.Thickness = 0x1
+_llllllIIII.Thickness = 1
 
-_lIlIlIlIIl.Parent = _lIllIlllII
+_llllllIIII.Parent = _lIIIlIlIII
 
 -- ═══════════════════════════════════════════════
 -- TITLE BAR
 -- ═══════════════════════════════════════════════
 
-local _lllIIlIlll = Instance.new("\070\114\097\109\101")
+local _lIIIlIIlII = Instance.new("Frame")
 
-_lllIIlIlll.Size =
-    UDim2.new(0x1, 0x0, 0x0, 0x28)
+_lIIIlIIlII.Size =
+    UDim2.new(1, 0, 0, 40)
 
-_lllIIlIlll.BackgroundColor3 = _IIIlllIlII.Card
+_lIIIlIIlII.BackgroundColor3 = _llIlIlllII.Card
 
-_lllIIlIlll.BorderSizePixel = 0x0
+_lIIIlIIlII.BorderSizePixel = 0
 
-_lllIIlIlll.Parent = _lIllIlllII
+_lIIIlIIlII.Parent = _lIIIlIlIII
 
-local _lIIlllIlIl = Instance.new("\085\073\067\111\114\110\101\114")
+local _IIlllIIIll = Instance.new("UICorner")
 
-_lIIlllIlIl.CornerRadius =
-    UDim.new(0x0, 0xE)
+_IIlllIIIll.CornerRadius =
+    UDim.new(0, 14)
 
-_lIIlllIlIl.Parent = _lllIIlIlll
+_IIlllIIIll.Parent = _lIIIlIIlII
 
-local _IIlIIlIIll = Instance.new("\070\114\097\109\101")
+local _IIIllllIIl = Instance.new("Frame")
 
-_IIlIIlIIll.Size =
-    UDim2.new(0x1, 0x0, 0x0, 0xE)
+_IIIllllIIl.Size =
+    UDim2.new(1, 0, 0, 14)
 
-_IIlIIlIIll.Position =
-    UDim2.new(0x0, 0x0, 0x1, -0xE)
+_IIIllllIIl.Position =
+    UDim2.new(0, 0, 1, -14)
 
-_IIlIIlIIll.BackgroundColor3 = _IIIlllIlII.Card
+_IIIllllIIl.BackgroundColor3 = _llIlIlllII.Card
 
-_IIlIIlIIll.BorderSizePixel = 0x0
+_IIIllllIIl.BorderSizePixel = 0
 
-_IIlIIlIIll.Parent = _lllIIlIlll
+_IIIllllIIl.Parent = _lIIIlIIlII
 
-local _lIIIllIlll = Instance.new("\084\101\120\116\076\097\098\101\108")
+local _IlllIIIllI = Instance.new("TextLabel")
 
-_lIIIllIlll.Size =
-    UDim2.new(0x1, -0x3C, 0x1, 0x0)
+_IlllIIIllI.Size =
+    UDim2.new(1, -60, 1, 0)
 
-_lIIIllIlll.Position =
-    UDim2.new(0x0, 0xF, 0x0, 0x0)
+_IlllIIIllI.Position =
+    UDim2.new(0, 15, 0, 0)
 
-_lIIIllIlll.BackgroundTransparency = 0x1
+_IlllIIIllI.BackgroundTransparency = 1
 
-_lIIIllIlll.Text = "\55357\56592\032\075\101\121\086\097\117\108\116"
+_IlllIIIllI.Text = "🔐 KeyVault"
 
-_lIIIllIlll.TextColor3 = _IIIlllIlII.Text
+_IlllIIIllI.TextColor3 = _llIlIlllII.Text
 
-_lIIIllIlll.Font = Enum.Font.GothamBold
+_IlllIIIllI.Font = Enum.Font.GothamBold
 
-_lIIIllIlll.TextSize = 0xE
+_IlllIIIllI.TextSize = 14
 
-_lIIIllIlll.TextXAlignment =
+_IlllIIIllI.TextXAlignment =
     Enum.TextXAlignment.Left
 
-_lIIIllIlll.Parent = _lllIIlIlll
+_IlllIIIllI.Parent = _lIIIlIIlII
 
 -- ═══════════════════════════════════════════════
 -- CLOSE
 -- ═══════════════════════════════════════════════
 
-local _IllllIIllI = Instance.new("\084\101\120\116\066\117\116\116\111\110")
+local _lIllIlIlIl = Instance.new("TextButton")
 
-_IllllIIllI.Size =
-    UDim2.new(0x0, 0x1A, 0x0, 0x1A)
+_lIllIlIlIl.Size =
+    UDim2.new(0, 26, 0, 26)
 
-_IllllIIllI.Position =
-    UDim2.new(0x1, -0x22, 0.5, -0xD)
+_lIllIlIlIl.Position =
+    UDim2.new(1, -34, 0.5, -13)
 
-_IllllIIllI.BackgroundColor3 = _IIIlllIlII.Danger
+_lIllIlIlIl.BackgroundColor3 = _llIlIlllII.Danger
 
-_IllllIIllI.BackgroundTransparency = 0.8
+_lIllIlIlIl.BackgroundTransparency = 0.8
 
-_IllllIIllI.BorderSizePixel = 0x0
+_lIllIlIlIl.BorderSizePixel = 0
 
-_IllllIIllI.Text = "\215"
+_lIllIlIlIl.Text = "×"
 
-_IllllIIllI.TextColor3 = _IIIlllIlII.Text
+_lIllIlIlIl.TextColor3 = _llIlIlllII.Text
 
-_IllllIIllI.Font = Enum.Font.GothamBold
+_lIllIlIlIl.Font = Enum.Font.GothamBold
 
-_IllllIIllI.TextSize = 0x12
+_lIllIlIlIl.TextSize = 18
 
-_IllllIIllI.AutoButtonColor = false
+_lIllIlIlIl.AutoButtonColor = false
 
-_IllllIIllI.Parent = _lllIIlIlll
+_lIllIlIlIl.Parent = _lIIIlIIlII
 
-local _IIIIIIIllI = Instance.new("\085\073\067\111\114\110\101\114")
+local _lIIlIIIlIl = Instance.new("UICorner")
 
-_IIIIIIIllI.CornerRadius =
-    UDim.new(0x0, 0x7)
+_lIIlIIIlIl.CornerRadius =
+    UDim.new(0, 7)
 
-_IIIIIIIllI.Parent = _IllllIIllI
+_lIIlIIIlIl.Parent = _lIllIlIlIl
 
-_IllllIIllI.MouseButton1Click:Connect(function()
+_lIllIlIlIl.MouseButton1Click:Connect(function()
 
-    _lllIIlIIIl:Destroy()
+    _lIIIIlIIlI:Destroy()
 
 end)
 
@@ -283,234 +295,234 @@ end)
 -- ICON
 -- ═══════════════════════════════════════════════
 
-local _IIIlllIllI = Instance.new("\084\101\120\116\076\097\098\101\108")
+local _IIIllllIlI = Instance.new("TextLabel")
 
-_IIIlllIllI.Size =
-    UDim2.new(0x1, 0x0, 0x0, 0x2A)
+_IIIllllIlI.Size =
+    UDim2.new(1, 0, 0, 42)
 
-_IIIlllIllI.Position =
-    UDim2.new(0x0, 0x0, 0x0, 0x31)
+_IIIllllIlI.Position =
+    UDim2.new(0, 0, 0, 49)
 
-_IIIlllIllI.BackgroundTransparency = 0x1
+_IIIllllIlI.BackgroundTransparency = 1
 
-_IIIlllIllI.Text = "\55357\56593"
+_IIIllllIlI.Text = "🔑"
 
-_IIIlllIllI.TextColor3 = _IIIlllIlII.Accent
+_IIIllllIlI.TextColor3 = _llIlIlllII.Accent
 
-_IIIlllIllI.Font = Enum.Font.GothamBold
+_IIIllllIlI.Font = Enum.Font.GothamBold
 
-_IIIlllIllI.TextSize = 0x24
+_IIIllllIlI.TextSize = 36
 
-_IIIlllIllI.Parent = _lIllIlllII
+_IIIllllIlI.Parent = _lIIIlIlIII
 
 -- ═══════════════════════════════════════════════
 -- SUBTITLE
 -- ═══════════════════════════════════════════════
 
-local _IlIIIlllII = Instance.new("\084\101\120\116\076\097\098\101\108")
+local _lllIlIIlIl = Instance.new("TextLabel")
 
-_IlIIIlllII.Size =
-    UDim2.new(0x1, -0x28, 0x0, 0x12)
+_lllIlIIlIl.Size =
+    UDim2.new(1, -40, 0, 18)
 
-_IlIIIlllII.Position =
-    UDim2.new(0x0, 0x14, 0x0, 0x5A)
+_lllIlIIlIl.Position =
+    UDim2.new(0, 20, 0, 90)
 
-_IlIIIlllII.BackgroundTransparency = 0x1
+_lllIlIIlIl.BackgroundTransparency = 1
 
-_IlIIIlllII.Text =
-    "\3651\3626\3656\3588\3637\3618\3660\3648\3614\3639\3656\3629\3648\3586\3657\3634\3651\3594\3657\3591\3634\3609\032\088\072\085\066"
+_lllIlIIlIl.Text =
+    "ใส่คีย์เพื่อเข้าใช้งาน XHUB"
 
-_IlIIIlllII.TextColor3 = _IIIlllIlII.SubText
+_lllIlIIlIl.TextColor3 = _llIlIlllII.SubText
 
-_IlIIIlllII.Font = Enum.Font.Gotham
+_lllIlIIlIl.Font = Enum.Font.Gotham
 
-_IlIIIlllII.TextSize = 0xB
+_lllIlIIlIl.TextSize = 11
 
-_IlIIIlllII.TextXAlignment =
+_lllIlIIlIl.TextXAlignment =
     Enum.TextXAlignment.Center
 
-_IlIIIlllII.Parent = _lIllIlllII
+_lllIlIIlIl.Parent = _lIIIlIlIII
 
 -- ═══════════════════════════════════════════════
 -- HWID DISPLAY
 -- ═══════════════════════════════════════════════
 
-local _IIllIlllIl = "\072\087\073\068\058\032\3652\3617\3656\3614\3610"
+local _lIIlIlIIll = "HWID: ไม่พบ"
 
-if _IIlIlIlIIl.HWID then
+if _IIIlIlIllI.HWID then
 
-    _IIllIlllIl =
-        "\072\087\073\068\058\032" ..
-        string.sub(_IIlIlIlIIl.HWID, 0x1, 0xC) ..
-        "\046\046\046"
+    _lIIlIlIIll =
+        "HWID: " ..
+        string.sub(_IIIlIlIllI.HWID, 1, 12) ..
+        "..."
 
 end
 
-local _llIIlIIllI = Instance.new("\084\101\120\116\076\097\098\101\108")
+local _lIIllIlIIl = Instance.new("TextLabel")
 
-_llIIlIIllI.Size =
-    UDim2.new(0x1, -0x28, 0x0, 0xE)
+_lIIllIlIIl.Size =
+    UDim2.new(1, -40, 0, 14)
 
-_llIIlIIllI.Position =
-    UDim2.new(0x0, 0x14, 0x0, 0x6C)
+_lIIllIlIIl.Position =
+    UDim2.new(0, 20, 0, 108)
 
-_llIIlIIllI.BackgroundTransparency = 0x1
+_lIIllIlIIl.BackgroundTransparency = 1
 
-_llIIlIIllI.Text = _IIllIlllIl
+_lIIllIlIIl.Text = _lIIlIlIIll
 
-_llIIlIIllI.TextColor3 =
-    Color3.fromRGB(0x5F, 0x64, 0x73)
+_lIIllIlIIl.TextColor3 =
+    Color3.fromRGB(95, 100, 115)
 
-_llIIlIIllI.Font = Enum.Font.Code
+_lIIllIlIIl.Font = Enum.Font.Code
 
-_llIIlIIllI.TextSize = 0x9
+_lIIllIlIIl.TextSize = 9
 
-_llIIlIIllI.TextXAlignment =
+_lIIllIlIIl.TextXAlignment =
     Enum.TextXAlignment.Center
 
-_llIIlIIllI.Parent = _lIllIlllII
+_lIIllIlIIl.Parent = _lIIIlIlIII
 
 -- ═══════════════════════════════════════════════
 -- INPUT FRAME
 -- ═══════════════════════════════════════════════
 
-local _lIlllIIIll = Instance.new("\070\114\097\109\101")
+local _llllIllllI = Instance.new("Frame")
 
-_lIlllIIIll.Size =
-    UDim2.new(0x1, -0x28, 0x0, 0x26)
+_llllIllllI.Size =
+    UDim2.new(1, -40, 0, 38)
 
-_lIlllIIIll.Position =
-    UDim2.new(0x0, 0x14, 0x0, 0x80)
+_llllIllllI.Position =
+    UDim2.new(0, 20, 0, 128)
 
-_lIlllIIIll.BackgroundColor3 = _IIIlllIlII.Input
+_llllIllllI.BackgroundColor3 = _llIlIlllII.Input
 
-_lIlllIIIll.BorderSizePixel = 0x0
+_llllIllllI.BorderSizePixel = 0
 
-_lIlllIIIll.Parent = _lIllIlllII
+_llllIllllI.Parent = _lIIIlIlIII
 
-local _IIlIlIIlll = Instance.new("\085\073\067\111\114\110\101\114")
+local _llIllllIlI = Instance.new("UICorner")
 
-_IIlIlIIlll.CornerRadius =
-    UDim.new(0x0, 0x8)
+_llIllllIlI.CornerRadius =
+    UDim.new(0, 8)
 
-_IIlIlIIlll.Parent = _lIlllIIIll
+_llIllllIlI.Parent = _llllIllllI
 
-local _llIlIIIIlI = Instance.new("\085\073\083\116\114\111\107\101")
+local _IIIllllIIl = Instance.new("UIStroke")
 
-_llIlIIIIlI.Color = _IIIlllIlII.Stroke
+_IIIllllIIl.Color = _llIlIlllII.Stroke
 
-_llIlIIIIlI.Thickness = 0x1
+_IIIllllIIl.Thickness = 1
 
-_llIlIIIIlI.Parent = _lIlllIIIll
+_IIIllllIIl.Parent = _llllIllllI
 
 -- ═══════════════════════════════════════════════
 -- INPUT
 -- ═══════════════════════════════════════════════
 
-local _IlllIlIIIl = Instance.new("\084\101\120\116\066\111\120")
+local _lIIIIlIlII = Instance.new("TextBox")
 
-_IlllIlIIIl.Size =
-    UDim2.new(0x1, -0x14, 0x1, 0x0)
+_lIIIIlIlII.Size =
+    UDim2.new(1, -20, 1, 0)
 
-_IlllIlIIIl.Position =
-    UDim2.new(0x0, 0xA, 0x0, 0x0)
+_lIIIIlIlII.Position =
+    UDim2.new(0, 10, 0, 0)
 
-_IlllIlIIIl.BackgroundTransparency = 0x1
+_lIIIIlIlII.BackgroundTransparency = 1
 
-_IlllIlIIIl.BorderSizePixel = 0x0
+_lIIIIlIlII.BorderSizePixel = 0
 
-_IlllIlIIIl.ClearTextOnFocus = false
+_lIIIIlIlII.ClearTextOnFocus = false
 
-_IlllIlIIIl.Text = ""
+_lIIIIlIlII.Text = ""
 
-_IlllIlIIIl.PlaceholderText =
-    "\3651\3626\3656\3588\3637\3618\3660\3607\3637\3656\3609\3637\3656\046\046\046"
+_lIIIIlIlII.PlaceholderText =
+    "ใส่คีย์ที่นี่..."
 
-_IlllIlIIIl.PlaceholderColor3 =
-    Color3.fromRGB(0x64, 0x69, 0x78)
+_lIIIIlIlII.PlaceholderColor3 =
+    Color3.fromRGB(100, 105, 120)
 
-_IlllIlIIIl.TextColor3 = _IIIlllIlII.Text
+_lIIIIlIlII.TextColor3 = _llIlIlllII.Text
 
-_IlllIlIIIl.Font = Enum.Font.Gotham
+_lIIIIlIlII.Font = Enum.Font.Gotham
 
-_IlllIlIIIl.TextSize = 0xD
+_lIIIIlIlII.TextSize = 13
 
-_IlllIlIIIl.TextXAlignment =
+_lIIIIlIlII.TextXAlignment =
     Enum.TextXAlignment.Left
 
-_IlllIlIIIl.Parent = _lIlllIIIll
+_lIIIIlIlII.Parent = _llllIllllI
 
 -- ═══════════════════════════════════════════════
 -- STATUS
 -- ═══════════════════════════════════════════════
 
-local _IlllIlIIIl = Instance.new("\084\101\120\116\076\097\098\101\108")
+local _IIIlIIllIl = Instance.new("TextLabel")
 
-_IlllIlIIIl.Size =
-    UDim2.new(0x1, -0x28, 0x0, 0x12)
+_IIIlIIllIl.Size =
+    UDim2.new(1, -40, 0, 18)
 
-_IlllIlIIIl.Position =
-    UDim2.new(0x0, 0x14, 0x0, 0xAB)
+_IIIlIIllIl.Position =
+    UDim2.new(0, 20, 0, 171)
 
-_IlllIlIIIl.BackgroundTransparency = 0x1
+_IIIlIIllIl.BackgroundTransparency = 1
 
-_IlllIlIIIl.Text = ""
+_IIIlIIllIl.Text = ""
 
-_IlllIlIIIl.TextColor3 = _IIIlllIlII.SubText
+_IIIlIIllIl.TextColor3 = _llIlIlllII.SubText
 
-_IlllIlIIIl.Font = Enum.Font.Gotham
+_IIIlIIllIl.Font = Enum.Font.Gotham
 
-_IlllIlIIIl.TextSize = 0xA
+_IIIlIIllIl.TextSize = 10
 
-_IlllIlIIIl.TextXAlignment =
+_IIIlIIllIl.TextXAlignment =
     Enum.TextXAlignment.Center
 
-_IlllIlIIIl.Parent = _lIllIlllII
+_IIIlIIllIl.Parent = _lIIIlIlIII
 
 -- ═══════════════════════════════════════════════
 -- LOGIN BUTTON
 -- ═══════════════════════════════════════════════
 
-local _IllIlIIlll = Instance.new("\084\101\120\116\066\117\116\116\111\110")
+local _lIIllllIlI = Instance.new("TextButton")
 
-_IllIlIIlll.Size =
-    UDim2.new(0x1, -0x28, 0x0, 0x24)
+_lIIllllIlI.Size =
+    UDim2.new(1, -40, 0, 36)
 
-_IllIlIIlll.Position =
-    UDim2.new(0x0, 0x14, 0x0, 0xC7)
+_lIIllllIlI.Position =
+    UDim2.new(0, 20, 0, 199)
 
-_IllIlIIlll.BackgroundColor3 = _IIIlllIlII.Accent
+_lIIllllIlI.BackgroundColor3 = _llIlIlllII.Accent
 
-_IllIlIIlll.BorderSizePixel = 0x0
+_lIIllllIlI.BorderSizePixel = 0
 
-_IllIlIIlll.Text = "\3648\3586\3657\3634\3626\3641\3656\3619\3632\3610\3610"
+_lIIllllIlI.Text = "เข้าสู่ระบบ"
 
-_IllIlIIlll.TextColor3 = _IIIlllIlII.Text
+_lIIllllIlI.TextColor3 = _llIlIlllII.Text
 
-_IllIlIIlll.Font = Enum.Font.GothamBold
+_lIIllllIlI.Font = Enum.Font.GothamBold
 
-_IllIlIIlll.TextSize = 0xD
+_lIIllllIlI.TextSize = 13
 
-_IllIlIIlll.AutoButtonColor = false
+_lIIllllIlI.AutoButtonColor = false
 
-_IllIlIIlll.Parent = _lIllIlllII
+_lIIllllIlI.Parent = _lIIIlIlIII
 
-local _lllIIlllll = Instance.new("\085\073\067\111\114\110\101\114")
+local _lllllIIlII = Instance.new("UICorner")
 
-_lllIIlllll.CornerRadius =
-    UDim.new(0x0, 0x8)
+_lllllIIlII.CornerRadius =
+    UDim.new(0, 8)
 
-_lllIIlllll.Parent = _IllIlIIlll
+_lllllIIlII.Parent = _lIIllllIlI
 
 -- ═══════════════════════════════════════════════
 -- STATUS FUNCTION
 -- ═══════════════════════════════════════════════
 
-local function _IIIlIllllI(text, color)
+local function _llIIllIIlI(text, color)
 
-    _IlllIlIIIl.Text = text
+    _IIIlIIllIl.Text = text
 
-    _IlllIlIIIl.TextColor3 = color
+    _IIIlIIllIl.TextColor3 = color
 
 end
 
@@ -518,31 +530,31 @@ end
 -- REQUEST HELPER
 -- ═══════════════════════════════════════════════
 
-local function _lIlIlIIlIl(url, _lIIIIlIlll)
+local function _IIIlIlllIl(url, _IlIlIIlIII)
 
-    local _lIIllIlllI, response = pcall(function()
+    local _lIIlIlllIl, response = pcall(function()
 
         return request({
 
-            Method = "\080\079\083\084",
+            Method = "POST",
 
             Url = url,
 
             Headers = {
-                ["\067\111\110\116\101\110\116\045\084\121\112\101"] =
-                    "\097\112\112\108\105\099\097\116\105\111\110\047\106\115\111\110"
+                ["Content-Type"] =
+                    "application/json"
             },
 
-            Body = _lIIIIlIlll
+            Body = _IlIlIIlIII
 
         })
 
     end)
 
-    if not _lIIllIlllI then
+    if not _lIIlIlllIl then
 
         warn(
-            "\091\075\101\121\086\097\117\108\116\093\032\082\101\113\117\101\115\116\032\069\114\114\111\114\058",
+            "[KeyVault] Request Error:",
             response
         )
 
@@ -551,12 +563,12 @@ local function _lIlIlIIlIl(url, _lIIIIlIlll)
     end
 
     print(
-        "\091\075\101\121\086\097\117\108\116\093\032\072\084\084\080\032\083\116\097\116\117\115\058",
+        "[KeyVault] HTTP Status:",
         response.StatusCode
     )
 
     print(
-        "\091\075\101\121\086\097\117\108\116\093\032\072\084\084\080\032\066\111\100\121\058",
+        "[KeyVault] HTTP Body:",
         response.Body
     )
 
@@ -568,55 +580,55 @@ end
 -- VALIDATE KEY
 -- ═══════════════════════════════════════════════
 
-local function _llIllIIIlI(_IlIIlIIlll)
+local function _llIIlIIIlI(_IllllIlIll)
 
-    if not _IIlIlIlIIl.HWID then
+    if not _IIIlIlIllI.HWID then
 
         return false,
-            "\10060\032\3652\3617\3656\3614\3610\032\072\087\073\068"
+            "❌ ไม่พบ HWID"
 
     end
 
-    local _lIIIIlIlll =
+    local _IlIlIIlIII =
         HttpService:JSONEncode({
 
-            _IlIIlIIlll = _IlIIlIIlll,
+            _IllllIlIll = _IllllIlIll,
 
-            hwid = _IIlIlIlIIl.HWID,
+            hwid = _IIIlIlIllI.HWID,
 
             username =
-                _IllllIIIll.Name
+                _IlIllIIlII.Name
 
         })
 
-    local _IIlllIllll, response =
-        _lIlIlIIlIl(
-            _lIllllIIll.API_VALIDATE,
-            _lIIIIlIlll
+    local _IIlIllIIlI, response =
+        _IIIlIlllIl(
+            _IllllllIll.API_VALIDATE,
+            _IlIlIIlIII
         )
 
-    if not _IIlllIllll then
+    if not _IIlIllIIlI then
 
         return false,
-            "\10060\032\3648\3594\3639\3656\3629\3617\3605\3656\3629\3648\3595\3636\3619\3660\3615\3648\3623\3629\3619\3660\3652\3617\3656\3652\3604\3657"
+            "❌ เชื่อมต่อเซิร์ฟเวอร์ไม่ได้"
 
     end
 
     if not response.Success then
 
         warn(
-            "\091\075\101\121\086\097\117\108\116\093\032\086\097\108\105\100\097\116\101\032\072\084\084\080\032\069\114\114\111\114\058",
+            "[KeyVault] Validate HTTP Error:",
             response.StatusCode,
             response.Body
         )
 
         return false,
-            "\10060\032\083\101\114\118\101\114\032\069\114\114\111\114\032" ..
+            "❌ Server Error " ..
             tostring(response.StatusCode)
 
     end
 
-    local _lIlIllIllI, data =
+    local _IIIIIIlllI, data =
         pcall(function()
 
             return HttpService:JSONDecode(
@@ -625,23 +637,23 @@ local function _llIllIIIlI(_IlIIlIIlll)
 
         end)
 
-    if not _lIlIllIllI then
+    if not _IIIIIIlllI then
 
         return false,
-            "\10060\032\083\101\114\118\101\114\032\3626\3656\3591\3586\3657\3629\3617\3641\3621\3652\3617\3656\3606\3641\3585\3605\3657\3629\3591"
+            "❌ Server ส่งข้อมูลไม่ถูกต้อง"
 
     end
 
     if data.success then
 
-        _IIlIlIlIIl.Token = data.token
+        _IIIlIlIllI.Token = data.token
 
-        _IIlIlIlIIl.IsValidated = true
+        _IIIlIlIllI.IsValidated = true
 
         if data.hwid
             and data.hwid ~= "" then
 
-            _IIlIlIlIIl.HWID = data.hwid
+            _IIIlIlIllI.HWID = data.hwid
 
         end
 
@@ -651,7 +663,7 @@ local function _llIllIIIlI(_IlIIlIIlll)
 
     return false,
         data.message or
-        "\10060\032\3588\3637\3618\3660\3652\3617\3656\3606\3641\3585\3605\3657\3629\3591"
+        "❌ คีย์ไม่ถูกต้อง"
 
 end
 
@@ -659,79 +671,79 @@ end
 -- LOAD PAYLOAD
 -- ═══════════════════════════════════════════════
 
-local function _lllllIIlll(code)
+local function _IIlIllllIl(code)
 
-    if type(code) ~= "\115\116\114\105\110\103"
+    if type(code) ~= "string"
         or code == "" then
 
-        _IIIlIllllI(
-            "\10060\032\3652\3617\3656\3614\3610\032\080\097\121\108\111\097\100",
-            _IIIlllIlII.Danger
+        _llIIllIIlI(
+            "❌ ไม่พบ Payload",
+            _llIlIlllII.Danger
         )
 
-        _IllIlIIlll.Interactable = true
+        _lIIllllIlI.Interactable = true
 
         return
 
     end
 
-    _IIIlIllllI(
-        "\9203\032\3585\3635\3621\3633\3591\3650\3627\3621\3604\032\088\072\085\066\046\046\046",
-        _IIIlllIlII.Warning
+    _llIIllIIlI(
+        "⏳ กำลังโหลด XHUB...",
+        _llIlIlllII.Warning
     )
 
     task.wait(0.4)
 
-    local _IllIIIIIIl, fn =
+    local _lllIlllIII, fn =
         pcall(function()
 
             return loadstring(code)
 
         end)
 
-    if not _IllIIIIIIl or not fn then
+    if not _lllIlllIII or not fn then
 
         warn(
-            "\091\075\101\121\086\097\117\108\116\093\032\080\097\121\108\111\097\100\032\067\111\109\112\105\108\101\032\069\114\114\111\114\058",
+            "[KeyVault] Payload Compile Error:",
             fn
         )
 
-        _IIIlIllllI(
-            "\10060\032\3650\3627\3621\3604\032\080\097\121\108\111\097\100\032\3652\3617\3656\3626\3635\3648\3619\3655\3592",
-            _IIIlllIlII.Danger
+        _llIIllIIlI(
+            "❌ โหลด Payload ไม่สำเร็จ",
+            _llIlIlllII.Danger
         )
 
-        _IllIlIIlll.Interactable = true
+        _lIIllllIlI.Interactable = true
 
         return
 
     end
 
-    _IIIlIllllI(
-        "\10003\032\076\111\103\105\110\032\3626\3635\3648\3619\3655\3592\033",
-        _IIIlllIlII.Success
+    _llIIllIIlI(
+        "✓ Login สำเร็จ!",
+        _llIlIlllII.Success
     )
 
-    _IllIlIIlll.Text = "\10003\032\3626\3635\3648\3619\3655\3592"
+    _lIIllllIlI.Text = "✓ สำเร็จ"
 
-    _IllIlIIlll.BackgroundColor3 =
-        _IIIlllIlII.Success
+    _lIIllllIlI.BackgroundColor3 =
+        _llIlIlllII.Success
 
     task.wait(0.8)
 
-    if _lllIIlIIIl and _lllIIlIIIl.Parent then
-        _lllIIlIIIl:Destroy()
+    if _lIIIIlIIlI and _lIIIIlIIlI.Parent then
+        _lIIIIlIIlI:Destroy()
     end
 
     task.wait(0.3)
 
-    local _IIlIlIIIll, runError =
+    local _IlIlIllIIl, runError =
         pcall(fn)
 
-    if not _IIlIlIIIll then
+    if not _IlIlIllIIl then
 
         warn(
-            "\091\075\101\121\086\097\117\108\116\093\032\080\097\121\108\111\097\100\032\082\117\110\116\105\109\101\032\069\114\114\111\114\058",
+            "[KeyVault] Payload Runtime Error:",
             runError
         )
 
@@ -743,39 +755,311 @@ end
 -- LOGIN
 -- ═══════════════════════════════════════════════
 
-local function _IlllllIIII()
+local function _lIllIllIll()
 
-    if _IIlIlIlIIl.Checking then
+    if _IIIlIlIllI.Checking then
         return
     end
 
-    local _IlIIlIIlll =
-        _IlllIlIIIl.Text:gsub(
-            "\094\037\115\042\040\046\045\041\037\115\042\036",
-            "\037\049"
+    local _IllllIlIll =
+        _lIIIIlIlII.Text:gsub(
+            "^%s*(.-)%s*$",
+            "%1"
         )
 
-    if _IlIIlIIlll == "" then
+    if _IllllIlIll == "" then
 
-        _IIIlIllllI(
-            "\9888\032\3585\3619\3640\3603\3634\3651\3626\3656\3588\3637\3618\3660\3585\3656\3629\3609",
-            _IIIlllIlII.Warning
+        _llIIllIIlI(
+            "⚠ กรุณาใส่คีย์ก่อน",
+            _llIlIlllII.Warning
         )
 
-        _IlllIlIIIl:CaptureFocus()
+        _lIIIIlIlII:CaptureFocus()
 
         return
 
     end
 
-    _IIlIlIlIIl.Checking = true
+    _IIIlIlIllI.Checking = true
 
-    _IllIlIIlll.Interactable = false
+    _lIIllllIlI.Interactable = false
 
-    _IllIlIIlll.Text =
-        "\3585\3635\3621\3633\3591\3605\3619\3623\3592\3626\3629\3610\046\046\046"
+    _lIIllllIlI.Text =
+        "กำลังตรวจสอบ..."
 
-    _IllIlIIlll.BackgroundColor3 =
-        Color3.fromRGB(0x46, 0x69, 0xAF)
+    _lIIllllIlI.BackgroundColor3 =
+        Color3.fromRGB(70, 105, 175)
 
-    _IIIlIl
+    _llIIllIIlI(
+        "⏳ กำลังตรวจสอบคีย์...",
+        _llIlIlllII.Accent
+    )
+
+    local _llIlIllIlI, result =
+        _llIIlIIIlI(_IllllIlIll)
+
+    if _llIlIllIlI then
+
+        print(
+            "[KeyVault] Validate Success"
+        )
+
+        _IIlIllllIl(result)
+
+        _IIIlIlIllI.Checking = false
+
+        return
+
+    end
+
+    _IIIlIlIllI.Checking = false
+
+    _IIIlIlIllI.IsValidated = false
+
+    warn(
+        "[KeyVault] Validate Failed:",
+        result
+    )
+
+    _llIIllIIlI(
+        result,
+        _llIlIlllII.Danger
+    )
+
+    _lIIllllIlI.Text =
+        "ลองอีกครั้ง"
+
+    _lIIllllIlI.BackgroundColor3 =
+        _llIlIlllII.Danger
+
+    _lIIllllIlI.Interactable = true
+
+    local _IlllIIllll =
+        _lIIIlIlIII.Position
+
+    for i = 1, 3 do
+
+        TweenService:Create(
+            _lIIIlIlIII,
+
+            TweenInfo.new(0.05),
+
+            {
+                Position =
+                    _IlllIIllll +
+                    UDim2.new(0, 7, 0, 0)
+            }
+
+        ):Play()
+
+        task.wait(0.05)
+
+        TweenService:Create(
+            _lIIIlIlIII,
+
+            TweenInfo.new(0.05),
+
+            {
+                Position =
+                    _IlllIIllll -
+                    UDim2.new(0, 7, 0, 0)
+            }
+
+        ):Play()
+
+        task.wait(0.05)
+
+    end
+
+    TweenService:Create(
+        _lIIIlIlIII,
+
+        TweenInfo.new(0.1),
+
+        {
+            Position =
+                _IlllIIllll
+        }
+
+    ):Play()
+
+    task.delay(1.5, function()
+
+        if not _lIIIIlIIlI.Parent then
+            return
+        end
+
+        if not _IIIlIlIllI.Checking then
+
+            _lIIllllIlI.Text =
+                "เข้าสู่ระบบ"
+
+            _lIIllllIlI.BackgroundColor3 =
+                _llIlIlllII.Accent
+
+            _lIIllllIlI.Interactable = true
+
+            _IIIlIIllIl.Text = ""
+
+        end
+
+    end)
+
+end
+
+-- ═══════════════════════════════════════════════
+-- BUTTON
+-- ═══════════════════════════════════════════════
+
+_lIIllllIlI.MouseButton1Click:Connect(function()
+
+    _lIllIllIll()
+
+end)
+
+-- ═══════════════════════════════════════════════
+-- ENTER
+-- ═══════════════════════════════════════════════
+
+_lIIIIlIlII.FocusLost:Connect(function(
+    enterPressed
+)
+
+    _IIIllllIIl.Color = _llIlIlllII.Stroke
+
+    if enterPressed then
+
+        _lIllIllIll()
+
+    end
+
+end)
+
+-- ═══════════════════════════════════════════════
+-- INPUT FOCUS
+-- ═══════════════════════════════════════════════
+
+_lIIIIlIlII.Focused:Connect(function()
+
+    _IIIllllIIl.Color =
+        _llIlIlllII.Accent
+
+end)
+
+-- ═══════════════════════════════════════════════
+-- OPEN ANIMATION
+-- ═══════════════════════════════════════════════
+
+_lIIIlIlIII.Size =
+    UDim2.new(0, 0, 0, 0)
+
+_lIIIlIlIII.Position =
+    UDim2.new(0.5, 0, 0.5, 0)
+
+TweenService:Create(
+
+    _lIIIlIlIII,
+
+    TweenInfo.new(
+        0.4,
+        Enum.EasingStyle.Back,
+        Enum.EasingDirection.Out
+    ),
+
+    {
+        Size =
+            UDim2.new(0, 320, 0, 250),
+
+        Position =
+            UDim2.new(
+                0.5,
+                -160,
+                0.5,
+                -125
+            )
+    }
+
+):Play()
+
+-- ═══════════════════════════════════════════════
+-- HEARTBEAT
+-- ═══════════════════════════════════════════════
+
+task.spawn(function()
+
+    while _lIIIIlIIlI.Parent do
+
+        task.wait(
+            _IllllllIll.HEARTBEAT_INTERVAL
+        )
+
+        if _IIIlIlIllI.IsValidated
+            and _IIIlIlIllI.Token then
+
+            local _IlIlIIlIII =
+                HttpService:JSONEncode({
+
+                    token =
+                        _IIIlIlIllI.Token,
+
+                    hwid =
+                        _IIIlIlIllI.HWID
+
+                })
+
+            local _IIlIllIIlI, response =
+                _IIIlIlllIl(
+                    _IllllllIll.API_HEARTBEAT,
+                    _IlIlIIlIII
+                )
+
+            if not _IIlIllIIlI then
+
+                warn(
+                    "[KeyVault] Heartbeat Request Error"
+                )
+
+            elseif response.StatusCode == 401 then
+
+                warn(
+                    "[KeyVault] Key invalidated"
+                )
+
+                _IIIlIlIllI.Token = nil
+                _IIIlIlIllI.IsValidated = false
+
+            elseif not response.Success then
+
+                warn(
+                    "[KeyVault] Heartbeat Failed:",
+                    response.StatusCode,
+                    response.Body
+                )
+
+            else
+
+                local _IIIIIIlllI, data =
+                    pcall(function()
+
+                        return HttpService:JSONDecode(
+                            response.Body
+                        )
+
+                    end)
+
+                if _IIIIIIlllI
+                    and data.success then
+
+                    print(
+                        "[KeyVault] Heartbeat OK"
+                    )
+
+                else
+
+                    warn(
+                        "[KeyVault] Invalid Heartbeat Response"
+                    )
+
+                end
+
+ 
