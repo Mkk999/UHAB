@@ -1599,12 +1599,28 @@ local InvisibleConfig = {
 }
 
 local invisChar, invisHumanoid, invisRoot
+local invisBodyParts = {}
 local invisConn = nil
+local invisCharAddedConn = nil
 
 local function setupInvisChar()
     invisChar = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
     invisHumanoid = invisChar:WaitForChild("Humanoid")
     invisRoot = invisChar:WaitForChild("HumanoidRootPart")
+    invisBodyParts = {}
+    for _, v in pairs(invisChar:GetDescendants()) do
+        if v:IsA("BasePart") and v.Transparency == 0 then
+            table.insert(invisBodyParts, v)
+        end
+    end
+end
+
+local function applyInvisTransparency(state)
+    for _, v in pairs(invisBodyParts) do
+        if v and v.Parent then
+            v.Transparency = state and 0.5 or 0
+        end
+    end
 end
 
 local function startInvisible()
@@ -1613,6 +1629,7 @@ local function startInvisible()
         invisConn = nil
     end
     setupInvisChar()
+    applyInvisTransparency(true)
     invisConn = RunService.Heartbeat:Connect(function()
         if not InvisibleConfig.Enabled then return end
         if not invisRoot or not invisHumanoid then return end
@@ -1624,6 +1641,14 @@ local function startInvisible()
         invisRoot.CFrame = cf
         invisHumanoid.CameraOffset = camOff
     end)
+    if not invisCharAddedConn then
+        invisCharAddedConn = LocalPlayer.CharacterAdded:Connect(function()
+            if InvisibleConfig.Enabled then
+                task.wait(0.5)
+                startInvisible()
+            end
+        end)
+    end
 end
 
 local function stopInvisible()
@@ -1631,6 +1656,7 @@ local function stopInvisible()
         invisConn:Disconnect()
         invisConn = nil
     end
+    applyInvisTransparency(false)
 end
 
 -- ═══════════════════════════════════════════════
@@ -1927,9 +1953,6 @@ SaveManager:BuildConfigSection(Tabs.UISettings)
 LocalPlayer.CharacterAdded:Connect(function()
     NoclipConfig.SavedCollide = {}
     task.wait(1)
-    if InvisibleConfig.Enabled then
-        startInvisible()
-    end
     if NoclipConfig.Enabled then
         startNoclip()
     end
